@@ -220,3 +220,4 @@ pip-log.txt
 
 # R files
 .Rhistory
+*.csv
