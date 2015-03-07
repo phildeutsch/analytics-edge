@@ -102,3 +102,30 @@ data.frame(x=sort(with(CPS, tapply(is.na(MetroAreaCode), State, mean))))
 MetroAreaMap = read.csv("MetroAreaCodes.csv")
 CountryMap = read.csv("CountryCodes.csv")
 
+str(MetroAreaMap)
+str(CountryMap)
+
+CPS = merge(CPS, MetroAreaMap, by.x="MetroAreaCode", by.y="Code", all.x=TRUE)
+str(CPS)
+sum(is.na(CPS$MetroArea))
+
+data.frame(sort(table(CPS$MetroArea)))
+
+data.frame(sort(with(CPS, tapply(Hispanic, MetroArea, mean))))
+
+data.frame(x=sort(with(CPS, tapply(Race=="Asian", MetroArea, mean))))
+
+data.frame(x=sort(tapply(CPS$Education == "No high school diploma", CPS$MetroArea, mean,na.rm=TRUE)))
+
+CPS = merge(CPS, CountryMap, by.x="CountryOfBirthCode", by.y="Code", all.x=TRUE)
+str(CPS)
+sum(is.na(CPS$Country))
+
+data.frame(x=sort(table(CPS$Country)))
+
+data.frame(x=sort(table(CPS$Country[CPS$MetroArea=="New York-Northern New Jersey-Long Island, NY-NJ-PA"])))
+(5404-3736)/5404
+
+data.frame(x=with(CPS, sort(tapply(Country=="India", MetroArea, sum, na.rm=TRUE))))
+data.frame(x=with(CPS, sort(tapply(Country=="Brazil", MetroArea, sum, na.rm=TRUE))))
+data.frame(x=with(CPS, sort(tapply(Country=="Somalia", MetroArea, sum, na.rm=TRUE))))
