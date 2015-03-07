@@ -1,5 +1,3 @@
-setwd("~/Analytics/Edge/week1")
-
 who = read.csv("WHO.csv")
 mean(who$Over60)
 
@@ -71,12 +69,36 @@ lines(Boeing$Date[301:432], Boeing$StockPrice[301:432], type="l", col="green")
 lines(ProcterGamble$Date[301:432], ProcterGamble$StockPrice[301:432], type="l", col="blue")
 lines(GE$Date[301:432], GE$StockPrice[301:432], type="l", col="Orange")
 
-plot(CocaCola$Date[301:432], CocaCola$StockPrice[301:432], type="l", col="red", ylim=c(0,210), xlim=c(as.Date("1997-09-01"), as.Date("1997-11-01")))
-lines(IBM$Date[301:432], IBM$StockPrice[301:432], type="l", col="black")
-lines(Boeing$Date[301:432], Boeing$StockPrice[301:432], type="l", col="green")
-lines(ProcterGamble$Date[301:432], ProcterGamble$StockPrice[301:432], type="l", col="blue")
-lines(GE$Date[301:432], GE$StockPrice[301:432], type="l", col="Orange")
-
 data.frame(delta=sort(tapply(IBM$StockPrice, months(IBM$Date), mean) - mean(IBM$StockPrice)))
 data.frame(delta=sort(tapply(GE$StockPrice, months(GE$Date), mean) - mean(GE$StockPrice)))
+
+##3
+
+CPS = read.csv("CPSData.csv")
+summary(CPS)
+str(CPS)
+
+data.frame(sort(table(CPS$Industry)))
+data.frame(sort(table(CPS$State)))
+
+data.frame(prop.table(table(CPS$Citizenship)))
+
+with(CPS, table(Race, Hispanic))
+
+data.frame(x=sapply(CPS, function(x) sum(is.na(x))))
+
+table(CPS$Region, is.na(CPS$Married))
+table(CPS$Sex, is.na(CPS$Married))
+table(CPS$Age, is.na(CPS$Married))
+table(CPS$Citizenship, is.na(CPS$Married))
+
+metro = as.data.frame.matrix(table(CPS$Region, is.na(CPS$MetroAreaCode)))
+names(metro) = c("metro", "non.metro")
+metro$prop = with(metro, non.metro / (metro + non.metro))
+metro[which.max(metro$prop),]
+
+data.frame(x=sort(with(CPS, tapply(is.na(MetroAreaCode), State, mean))))
+
+MetroAreaMap = read.csv("MetroAreaCodes.csv")
+CountryMap = read.csv("CountryCodes.csv")
 
