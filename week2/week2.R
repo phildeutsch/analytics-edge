@@ -39,3 +39,27 @@ wins2012 = c(94,88,95,88,93,94,98,97,93,94)
 wins2013 = c(97,97,92,93,92,96,94,96,92,90)
 cor(teamRank, wins2012)
 cor(teamRank, wins2013)
+
+## Assignment 2
+climate = read.csv("climate_change.csv")
+training = subset(climate, Year <= 2006)
+testing = subset(climate, Year > 2006)
+
+fit = lm(Temp ~ . - Year - Month, training)
+summary(fit)
+
+cor(training)[,6,drop=FALSE]
+cor(training)[,7,drop=FALSE]
+
+fit = lm(Temp ~ MEI + TSI + Aerosols + N2O, training)
+summary(fit)
+
+stepfit = step(lm(Temp ~ . - Year - Month, training))
+summary(stepfit)
+summary(lm(Temp ~ . - Year - Month, training))
+
+p = predict(stepfit, testing)
+TSS = with(testing, sum((Temp-mean(Temp))**2))
+RSS = with(testing, sum((Temp-p)**2))
+R2  = 1 - RSS/TSS
+R2
