@@ -65,4 +65,40 @@ RSS = with(testing, sum((Temp-p)**2))
 R2  = 1 - RSS/TSS
 R2
 
+## Reading test scores
+pisaTrain = read.csv("pisa2009train.csv")
+pisaTest = read.csv("pisa2009test.csv")
 
+nrow(pisaTrain)
+
+with(pisaTrain, tapply(readingScore, male, mean))
+
+sapply(pisaTrain, function(x) sum(is.na(x)))
+
+pisaTrain = na.omit(pisaTrain)
+pisaTest = na.omit(pisaTest)
+
+nrow(pisaTrain)
+nrow(pisaTest)
+
+pisaTrain$raceeth = relevel(pisaTrain$raceeth, "White")
+pisaTest$raceeth = relevel(pisaTest$raceeth, "White")
+lmScore = lm(readingScore ~ ., pisaTrain)
+summary(lmScore)
+
+p = predict(lmScore, pisaTrain)
+RSS = with(pisaTrain, sum((readingScore-p)**2))
+sqrt(RSS/nrow(pisaTrain))
+
+predTest = predict(lmScore, pisaTest)
+summary(predTest)
+
+TSS = with(pisaTest, sum((readingScore-mean(pisaTrain$readingScore))**2)) 
+RSS = with(pisaTest, sum((readingScore-predTest)**2))
+sqrt(RSS/nrow(pisaTest))
+
+mean(pisaTest$readingScore)
+TSS
+
+
+1-RSS/TSS
