@@ -58,8 +58,11 @@ stepfit = step(lm(Temp ~ . - Year - Month, training))
 summary(stepfit)
 summary(lm(Temp ~ . - Year - Month, training))
 
-p = predict(stepfit, testing)
-TSS = with(testing, sum((Temp-mean(Temp))**2))
+p = predict(stepfi, testing)
+
+TSS = with(testing, sum((Temp-mean(training$Temp))**2)) # not sure why we use the training mean
 RSS = with(testing, sum((Temp-p)**2))
 R2  = 1 - RSS/TSS
 R2
+
+
