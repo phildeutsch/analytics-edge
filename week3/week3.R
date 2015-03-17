@@ -58,6 +58,11 @@ summary(SongsLog2)
 SongsLog3 = glm(Top10 ~ . - energy, data=SongsTrain, family=binomial)
 summary(SongsLog3)
 
-p = rep(0, nrow(SongsTest))
-p[predict(SongsLog3, SongsTest, type="response")>=0.45]=1
-table(SongsTest$Top10, p)
+p = predict(SongsLog3, SongsTest, type="response")
+table(SongsTest$Top10, p>=0.45)
+
+p2 = rep(FALSE, nrow(SongsTest))
+table(SongsTest$Top10, p2>=0.45)
+
+sum(p>=0.45 & SongsTest$Top10==1)
+sum(p>=0.45 & SongsTest$Top10==0)
