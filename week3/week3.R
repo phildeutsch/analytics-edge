@@ -1,5 +1,6 @@
 library(caTools)
 library(ROCR)
+library(dplyr)
 
 quality = read.csv("quality.csv")
 
@@ -20,3 +21,43 @@ ROCRpredTest = prediction(predictTest, qualityTest$PoorCare)
 auc = as.numeric(performance(ROCRpredTest, "auc")@y.values)
 
 ##############
+
+## Popularity of music records
+
+songs = read.csv("songs.csv")
+
+dim(filter(songs, year==2010))
+
+dim(filter(songs, artistname=="Michael Jackson"))
+
+songs %>%
+  filter(artistname=="Michael Jackson", Top10==1) %>%
+  select(songtitle)
+
+table(songs$timesignature)
+
+songs %>%
+  arrange(desc(tempo)) %>%
+  select(songtitle, tempo) %>%
+  head
+
+SongsTrain = subset(songs, year  < 2010)
+SongsTest  = subset(songs, year == 2010)
+
+nonvars = c("year", "songtitle", "artistname", "songID", "artistID")
+SongsTrain = SongsTrain[ , !(names(SongsTrain) %in% nonvars) ]
+SongsTest = SongsTest[ , !(names(SongsTest) %in% nonvars) ]
+Model1 = glm(Top10 ~ ., data=SongsTrain, family=binomial)
+summary(Model1)
+
+with(SongsTrain, cor(loudness, energy))
+
+SongsLog2 = glm(Top10 ~ . - loudness, data=SongsTrain, family=binomial)
+summary(SongsLog2)
+
+SongsLog3 = glm(Top10 ~ . - energy, data=SongsTrain, family=binomial)
+summary(SongsLog3)
+
+p = rep(0, nrow(SongsTest))
+p[predict(SongsLog3, SongsTest, type="response")>=0.45]=1
+table(SongsTest$Top10, p)
