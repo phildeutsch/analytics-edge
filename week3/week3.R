@@ -66,3 +66,53 @@ table(SongsTest$Top10, p2>=0.45)
 
 sum(p>=0.45 & SongsTest$Top10==1)
 sum(p>=0.45 & SongsTest$Top10==0)
+
+## Predicting parole violators
+
+parole = read.csv("parole.csv")
+dim(parole)
+table(parole$violator)
+
+sapply(parole, function(x) length(unique(x)))
+parole$state = as.factor(parole$state)
+parole$crime = as.factor(parole$crime)
+
+set.seed(144)
+split = sample.split(parole$violator, SplitRatio = 0.7)
+train = subset(parole, split == TRUE)
+test = subset(parole, split == FALSE)
+
+paroleModel = glm(violator ~ ., data=train, family="binomial")
+summary(paroleModel)
+
+p = predict(paroleModel, data.frame(
+      male = 1,
+      race = 1,
+      age = 50,
+      state = as.factor(1),
+      time.served = 3,
+      max.sentence = 12,
+      multiple.offenses = 0,
+      crime = as.factor(2)
+      ), type="response")
+p/(1-p)
+p
+
+predictTest = predict(paroleModel,test, type="response")
+max(predictTest)
+
+table(test$violator, predictTest >= 0.5)
+12/(12+11)
+167/(167+12)
+(12+167)/(167+12+11+12)
+
+table(test$violator, rep(FALSE, nrow(test)))
+179/(179+23)
+
+ROCRpredTest = prediction(predictTest, test$violator)
+auc = as.numeric(performance(ROCRpredTest, "auc")@y.values)
+auc
+
+ROCRperf = performance(ROCRpredTest, "tpr", "fpr")
+plot(ROCRperf, colorize=TRUE)
+abline(0,1)
