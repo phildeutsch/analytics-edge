@@ -3,6 +3,8 @@ library(rpart)
 library(rpart.plot)
 library(ROCR)
 library(randomForest)
+library(caret)
+library(e1071)
 
 ## QQ
 
@@ -45,3 +47,15 @@ StevensForest = randomForest(Reverse ~ Circuit + Issue + Petitioner + Respondent
 PredictForest = predict(StevensForest, newdata=Test)
 table(Test$Reverse, PredictForest)
 (44+76)/nrow(Test)
+
+##
+numFolds = trainControl(method="cv", number=10)
+cpGrid = expand.grid(.cp=seq(0.01,0.5,0.01))
+train(Reverse ~ Circuit + Issue + Petitioner + Respondent + LowerCourt + Unconst,
+  data=Train, method="rpart", trControl=numFolds, tuneGrid = cpGrid)
+StevensTreeCV = rpart(Reverse ~ Circuit + Issue + Petitioner + LowerCourt + Unconst,
+  data = Train, method="class", cp=0.18)
+PredictCV = predict(StevensTreeCV, newdata=Test, type="class")
+table(Test$Reverse, PredictCV)
+
+prp(StevensTreeCV)
