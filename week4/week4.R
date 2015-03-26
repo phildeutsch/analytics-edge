@@ -6,7 +6,7 @@ library(randomForest)
 library(caret)
 library(e1071)
 
-## QQ
+## QQ1
 
 stevens = read.csv("stevens.csv")
 set.seed(3000)
@@ -48,7 +48,6 @@ PredictForest = predict(StevensForest, newdata=Test)
 table(Test$Reverse, PredictForest)
 (44+76)/nrow(Test)
 
-##
 numFolds = trainControl(method="cv", number=10)
 cpGrid = expand.grid(.cp=seq(0.01,0.5,0.01))
 train(Reverse ~ Circuit + Issue + Petitioner + Respondent + LowerCourt + Unconst,
@@ -59,3 +58,25 @@ PredictCV = predict(StevensTreeCV, newdata=Test, type="class")
 table(Test$Reverse, PredictCV)
 
 prp(StevensTreeCV)
+
+## QQ2
+Claims = read.csv("ClaimsData.csv")
+set.seed(88)
+spl = sample.split(Claims$bucket2009, SplitRatio=0.6)
+ClaimsTrain = subset(Claims, spl)
+ClaimsTest = subset(Claims, !spl)
+
+mean(ClaimsTrain$age)
+prop.table(table(ClaimsTrain$diabetes))
+
+p = rep(1, nrow(ClaimsTest))
+table(ClaimsTest$bucket2009, p)
+122978/nrow(ClaimsTest)
+
+m = as.matrix(table(ClaimsTest$bucket2009, ClaimsTest$bucket2008))
+sum(m*PenaltyMatrix)/nrow(ClaimsTest)
+
+PenaltyMatrix = matrix(c(0,1,2,3,4,2,0,1,2,3,4,2,0,1,2,6,4,2,0,1,8,6,4,2,0), byrow=TRUE, nrow=5)
+PenaltyMatrix
+m = as.matrix(cbind(table(ClaimsTest$bucket2009, p)[,1], rep(0,5), rep(0,5), rep(0,5), rep(0,5)))
+sum(m*PenaltyMatrix)/nrow(ClaimsTest)
