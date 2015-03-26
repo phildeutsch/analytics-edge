@@ -133,3 +133,49 @@ summary(LogModel2)
 p3 = predict(LogModel2, newdata=Possibilities, type="response")
 round(abs(p3[4]-p2[4]),5)
 
+## HW 2
+
+letters = read.csv("letters_ABPR.csv")
+letters$isB = as.factor(letters$letter == "B")
+
+set.seed(1000)
+spl = sample.split(letters$isB, SplitRatio=0.5)
+Train = subset(letters, spl)
+Test = subset(letters, !spl)
+
+p = rep(FALSE, nrow(Test))
+c =table(Test$isB, p)
+c[1]/nrow(Test)
+
+CARTb = rpart(isB ~ . - letter, data=Train, method="class")
+p = predict(CARTb, newdata=Test, type="class")
+c =table(Test$isB, p)
+(c[1,1]+c[2,2])/sum(c)
+
+set.seed(1000)
+RFb = randomForest(isB ~ . - letter, data=Train)
+p = predict(RFb, newdata=Test, type="class")
+c =table(Test$isB, p)
+(c[1,1]+c[2,2])/sum(c)
+
+letters$letter = as.factor( letters$letter ) 
+set.seed(2000)
+spl = sample.split(letters$letter, SplitRatio=0.5)
+Train = subset(letters, spl)
+Test = subset(letters, !spl)
+
+table(Train$letter)
+table(Test$letter, rep("P", nrow(Test)))
+401/nrow(Test)
+
+RTletter = rpart(letter ~ . - isB, data=Train)
+p = predict(RTletter, newdata=Test, type="class")
+c = table(Test$letter, p)
+(c[1,1]+c[2,2]+c[3,3]+c[4,4])/nrow(Test)
+
+set.seed(1000)
+RFletter = randomForest(letter ~ . - isB, data=Train)
+p = predict(RFletter, newdata=Test, type="class")
+c = table(Test$letter, p)
+(c[1,1]+c[2,2]+c[3,3]+c[4,4])/nrow(Test)
+
