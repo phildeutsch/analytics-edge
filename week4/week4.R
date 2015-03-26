@@ -80,3 +80,56 @@ PenaltyMatrix = matrix(c(0,1,2,3,4,2,0,1,2,3,4,2,0,1,2,6,4,2,0,1,8,6,4,2,0), byr
 PenaltyMatrix
 m = as.matrix(cbind(table(ClaimsTest$bucket2009, p)[,1], rep(0,5), rep(0,5), rep(0,5), rep(0,5)))
 sum(m*PenaltyMatrix)/nrow(ClaimsTest)
+
+## HW 1
+gerber = read.csv("gerber.csv")
+prop.table(table(gerber$voting))
+with(gerber, table(voting, hawthorne))[2,2]/sum(with(gerber, table(voting, hawthorne))[,2])
+with(gerber, table(voting, civicduty))[2,2]/sum(with(gerber, table(voting, civicduty))[,2])
+with(gerber, table(voting, neighbors))[2,2]/sum(with(gerber, table(voting, neighbors))[,2])
+with(gerber, table(voting, self))[2,2]/sum(with(gerber, table(voting, self))[,2])
+
+gerberLR = glm(voting ~ civicduty + hawthorne + self + neighbors, data=gerber, family="binomial")
+summary(gerberLR)
+
+p = predict(gerberLR, gerber, type="response")
+table(gerber$voting, p>=0.3)
+(134513+51966)/nrow(gerber)
+
+table(gerber$voting, p>=0.5)
+(235388)/nrow(gerber)
+
+CARTmodel = rpart(voting ~ civicduty + hawthorne + self + neighbors, data=gerber)
+prp(CARTmodel)
+
+CARTmodel2 = rpart(voting ~ civicduty + hawthorne + self + neighbors, data=gerber, cp=0.0)
+prp(CARTmodel2)
+
+CARTmodel3 = rpart(voting ~ civicduty + hawthorne + self + neighbors + sex, data=gerber, cp=0.0)
+prp(CARTmodel3)
+
+
+CARTmodelControl = rpart(voting ~ control, data=gerber, cp=0.0)
+prp(CARTmodelControl, digits=6)
+abs(0.296638-0.34)
+
+
+CARTmodelSex = rpart(voting ~ control + sex, data=gerber, cp=0.0)
+prp(CARTmodelSex, digits=6)
+abs(0.290456-0.302795)
+abs(0.334176-0.345818)
+
+gerberLR2 = glm(voting ~ control + sex, data=gerber, family="binomial")
+summary(gerberLR2)
+
+Possibilities = data.frame(sex=c(0,0,1,1),control=c(0,1,0,1))
+p1 = predict(gerberLR2, newdata=Possibilities, type="response")
+p2 = predict(CARTmodelSex, newdata=Possibilities)
+round(abs(p1[4]-p2[4]),5)
+
+LogModel2 = glm(voting ~ sex + control + sex:control, data=gerber, family="binomial")
+summary(LogModel2)
+
+p3 = predict(LogModel2, newdata=Possibilities, type="response")
+round(abs(p3[4]-p2[4]),5)
+
