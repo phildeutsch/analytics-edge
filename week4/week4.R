@@ -179,3 +179,64 @@ p = predict(RFletter, newdata=Test, type="class")
 c = table(Test$letter, p)
 (c[1,1]+c[2,2]+c[3,3]+c[4,4])/nrow(Test)
 
+## HW 3
+
+census = read.csv("census.csv")
+set.seed(2000)
+spl = sample.split(census$over50k, SplitRatio=0.6)
+Train = subset(census, spl)
+Test = subset(census, !spl)
+
+censusLR = glm(over50k ~ ., data=Train, family="binomial")
+summary(censusLR)
+
+p = predict(censusLR, newdata=Test)
+c =table(Test$over50k, p>=0.5)
+(c[1,1]+c[2,2])/sum(c)
+
+table(Train$over50k)
+pbase = rep("<=50K", nrow(Test))
+c =table(Test$over50k, pbase)
+(c[1,1])/sum(c)
+
+pred = prediction(p, Test$over50k)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
+
+censusRT = rpart(over50k ~ ., data=Train, method="class")
+prp(censusRT)
+p2 = predict(censusRT, newdata=Test)[,2]
+c =table(Test$over50k, p2>=0.5)
+(c[1,1]+c[2,2])/sum(c)
+
+pred = prediction(p2, Test$over50k)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
+
+set.seed(1)
+trainSmall = Train[sample(nrow(Train), 2000), ]
+censusRF = randomForest(over50k ~ ., data=trainSmall, method="class")
+p3 = predict(censusRF, newdata=Test)
+c =table(Test$over50k, p3)
+(c[1,1]+c[2,2])/sum(c)
+
+vu = varUsed(censusRF, count=TRUE)
+vusorted = sort(vu, decreasing = FALSE, index.return = TRUE)
+dotchart(vusorted$x, names(censusRF$forest$xlevels[vusorted$ix]))
+
+varImpPlot(censusRF)
+
+set.seed(2)
+cartGrid = expand.grid( .cp = seq(0.002,0.1,0.002))
+numFolds = trainControl(method="cv", number=10)
+train(over50k ~ ., data=Train, method="rpart", trControl=numFolds, tuneGrid = cartGrid)
+
+censusRF2 = rpart(over50k ~ ., data=Train, method="class", cp=0.002)
+p3 = predict(censusRF2, newdata=Test, type="class")
+c =table(Test$over50k, p3)
+(c[1,1]+c[2,2])/sum(c)
+
+prp(censusRF2)
+summary(censusRF2)
