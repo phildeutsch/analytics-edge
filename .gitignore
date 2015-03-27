@@ -216,8 +216,8 @@ pip-log.txt
 .mr.developer.cfg
 
 #CSV files
-.csv
+*.csv
 
 # R files
 .Rhistory
-*.csv
+.RData
