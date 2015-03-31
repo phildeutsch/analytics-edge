@@ -44,3 +44,6 @@ tweetLog = glm(Negative ~ ., data=trainSparse, family="binomial")
 predictions = predict(tweetLog, newdata=testSparse, type="response")
 c = table(testSparse$Negative, predictions>0.5)
 (c[1,1]+c[2,2])/nrow(testSparse)
+
+## Assignment 1
+
