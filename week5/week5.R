@@ -4,6 +4,7 @@ library(caTools)
 library(rpart)
 library(rpart.plot)
 library(randomForest)
+library(ROCR)
 
 ## QQs
 
@@ -123,3 +124,67 @@ ctRT3 = table(wikiTest3$Vandal, pRT3)
 prp(wikiRT3)
 
 ## Assignment 2
+
+trials = read.csv("clinical_trial.csv", stringsAsFactors=FALSE)
+max(nchar(trials$abstract))
+
+sum(nchar(trials$abstract)==0)
+
+trials$title[which.min(nchar(trials$title))]
+
+corpusTitle = Corpus(VectorSource(trials$title))
+corpusTitle = tm_map(corpusTitle, tolower)
+corpusTitle = tm_map(corpusTitle, PlainTextDocument)
+corpusTitle = tm_map(corpusTitle, removePunctuation)
+corpusTitle = tm_map(corpusTitle, removeWords, stopwords("english"))
+corpusTitle = tm_map(corpusTitle, stemDocument)
+dtmTitle = DocumentTermMatrix(corpusTitle)
+dtmTitle = removeSparseTerms(dtmTitle, 0.95)
+dtmTitle = as.data.frame(as.matrix(dtmTitle))
+corpusAbstract = Corpus(VectorSource(trials$abstract))
+corpusAbstract = tm_map(corpusAbstract, tolower)
+corpusAbstract = tm_map(corpusAbstract, PlainTextDocument)
+corpusAbstract = tm_map(corpusAbstract, removePunctuation)
+corpusAbstract = tm_map(corpusAbstract, removeWords, stopwords("english"))
+corpusAbstract = tm_map(corpusAbstract, stemDocument)
+dtmAbstract = DocumentTermMatrix(corpusAbstract)
+dtmAbstract = removeSparseTerms(dtmAbstract, 0.95)
+dtmAbstract = as.data.frame(as.matrix(dtmAbstract))
+ncol(dtmTitle)
+ncol(dtmAbstract)
+
+which.max(colSums(dtmAbstract))
+
+colnames(dtmTitle) = paste0("T", colnames(dtmTitle))
+colnames(dtmAbstract) = paste0("A", colnames(dtmAbstract))
+
+dtm = cbind(dtmTitle, dtmAbstract)
+dtm$trial = trials$trial
+ncol(dtm)
+
+set.seed(144)
+splt = sample.split(dtm$trial, SplitRatio=0.7)
+train = dtm[splt,]
+test = dtm[!splt,]
+table(train$trial)
+table(test$trial)[1]/nrow(test)
+
+trialCART = rpart(trial ~ ., data=train, method="class")
+prp(trialCART)
+
+ptrialCART = predict(trialCART, train)[,2]
+max(ptrialCART)
+
+ct = table(train$trial, ptrialCART>=0.5)
+(ct[1,1]+ct[2,2])/nrow(train)
+ct[2,2]/(ct[2,1]+ct[2,2])
+ct[1,1]/(ct[1,1]+ct[1,2])
+
+ptrialCART2 = predict(trialCART, test)[,2]
+ct = table(test$trial, ptrialCART2>=0.5)
+(ct[1,1]+ct[2,2])/nrow(test)
+
+pred = prediction(ptrialCART2, test$trial)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
