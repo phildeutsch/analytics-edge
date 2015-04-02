@@ -188,3 +188,105 @@ pred = prediction(ptrialCART2, test$trial)
 perf = performance(pred, "tpr", "fpr")
 plot(perf)
 as.numeric(performance(pred, "auc")@y.values)
+
+## Assignment 3
+emails = read.csv("emails.csv", stringsAsFactors=FALSE)
+nrow(emails)
+
+table(emails$spam)
+
+max(nchar(emails$text))
+
+which.min(nchar(emails$text))
+
+corpus = Corpus(VectorSource(emails$text))
+corpus = tm_map(corpus, tolower)
+corpus = tm_map(corpus, PlainTextDocument)
+corpus = tm_map(corpus, removePunctuation)
+corpus = tm_map(corpus, removeWords, stopwords("english"))
+corpus = tm_map(corpus, stemDocument)
+dtm = DocumentTermMatrix(corpus)
+dtm
+
+spdtm = removeSparseTerms(dtm, 0.95)
+spdtm
+
+emailsSparse  = as.data.frame(as.matrix(spdtm))
+colnames(emailsSparse) = make.names(colnames(emailsSparse))
+which.max(colSums(emailsSparse))
+
+emailsSparse$spam = emails$spam
+sum(colSums(emailsSparse[emailsSparse$spam==0,names(emailsSparse) !="spam"])>=5000)
+
+sum(colSums(emailsSparse[emailsSparse$spam==1,names(emailsSparse) !="spam"])>=1000)
+
+emailsSparse$spam = as.factor(emailsSparse$spam)
+set.seed(123)
+splt = sample.split(emailsSparse$spam, 0.7)
+train = emailsSparse[splt,]
+test = emailsSparse[!splt,]
+spamLog = glm(spam ~ ., data=train, family="binomial")
+spamCART = rpart(spam ~ ., data=train, method="class")
+set.seed(123)
+spamRF = randomForest(spam ~ ., data=train, method="class")
+predLog = predict(spamLog, train, type="response")
+predCART = predict(spamCART, train)[,2]
+predRF = predict(spamRF, train, type="prob")[,2]
+sum(predLog<0.00001)
+sum(predLog>0.99999)
+sum(predLog>=0.00001 & predLog<=0.99999)
+
+summary(spamLog)
+
+prp(spamCART)
+
+ct = table(train$spam, predLog>=0.5)
+(ct[1,1]+ct[2,2])/nrow(train)
+
+pred = prediction(predLog, train$spam)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
+
+ct = table(train$spam, predCART>=0.5)
+(ct[1,1]+ct[2,2])/nrow(train)
+
+pred = prediction(predCART, train$spam)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
+
+ct = table(train$spam, predRF>=0.5)
+(ct[1,1]+ct[2,2])/nrow(train)
+
+pred = prediction(predRF, train$spam)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
+
+predLog = predict(spamLog, test, type="response")
+predCART = predict(spamCART, test)[,2]
+predRF = predict(spamRF, test, type="prob")[,2]
+ct = table(test$spam, predLog>=0.5)
+(ct[1,1]+ct[2,2])/nrow(test)
+
+pred = prediction(predLog, test$spam)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
+
+ct = table(test$spam, predCART>=0.5)
+(ct[1,1]+ct[2,2])/nrow(test)
+
+pred = prediction(predCART, test$spam)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
+
+ct = table(test$spam, predRF>=0.5)
+(ct[1,1]+ct[2,2])/nrow(test)
+
+pred = prediction(predRF, test$spam)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+as.numeric(performance(pred, "auc")@y.values)
