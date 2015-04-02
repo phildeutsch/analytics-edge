@@ -47,3 +47,79 @@ c = table(testSparse$Negative, predictions>0.5)
 
 ## Assignment 1
 
+wiki = read.csv("wiki.csv", stringsAsFactors=FALSE)
+wiki$Vandal = as.factor(wiki$Vandal)
+table(wiki$Vandal)
+
+corpusAdded = Corpus(VectorSource(wiki$Added))
+corpusAdded = tm_map(corpusAdded, PlainTextDocument)
+corpusAdded = tm_map(corpusAdded, removeWords, stopwords("english"))
+corpusAdded = tm_map(corpusAdded, stemDocument)
+dtmAdded = DocumentTermMatrix(corpusAdded)
+dtmAdded
+
+sparseAdded = removeSparseTerms(dtmAdded, 0.997)
+sparseAdded
+
+wordsAdded = as.data.frame(as.matrix(sparseAdded))
+colnames(wordsAdded) = paste("A", colnames(wordsAdded))
+corpusRemoved = Corpus(VectorSource(wiki$Removed))
+corpusRemoved = tm_map(corpusRemoved, PlainTextDocument)
+corpusRemoved = tm_map(corpusRemoved, removeWords, stopwords("english"))
+corpusRemoved = tm_map(corpusRemoved, stemDocument)
+dtmRemoved = DocumentTermMatrix(corpusRemoved)
+sparseRemoved = removeSparseTerms(dtmRemoved, 0.997)
+wordsRemoved = as.data.frame(as.matrix(sparseRemoved))
+colnames(wordsRemoved) = paste("R", colnames(wordsRemoved))
+ncol(wordsRemoved)
+
+wikiWords = cbind(wordsAdded, wordsRemoved) 
+wikiWords$Vandal = wiki$Vandal
+set.seed(123)
+splt = sample.split(wikiWords$Vandal, SplitRatio=0.7)
+trainWiki = wikiWords[splt,]
+testWiki = wikiWords[!splt,]
+table(testWiki$Vandal)[1]/nrow(testWiki)
+
+wikiRT = rpart(Vandal ~., data=trainWiki, method="class")
+pRT = predict(wikiRT, testWiki, type="class")
+ctRT = table(testWiki$Vandal, pRT)
+(ctRT[1,1]+ctRT[2,2])/nrow(testWiki)
+
+prp(wikiRT)
+
+wikiWords2 = wikiWords 
+wikiWords2$HTTP = ifelse(grepl("http",wiki$Added,fixed=TRUE), 1, 0)
+table(wikiWords2$HTTP)
+
+wikiTrain2 = subset(wikiWords2, splt)
+wikiTest2 = subset(wikiWords2, !splt)
+wikiRT2 = rpart(Vandal ~., data=wikiTrain2, method="class")
+pRT2 = predict(wikiRT2, wikiTest2, type="class")
+ctRT2 = table(wikiTest2$Vandal, pRT2)
+(ctRT2[1,1]+ctRT2[2,2])/nrow(wikiTest2)
+
+wikiWords2$NumWordsAdded = rowSums(as.matrix(dtmAdded))
+wikiWords2$NumWordsRemoved = rowSums(as.matrix(dtmRemoved))
+mean(wikiWords2$NumWordsAdded)
+
+wikiTrain2b = subset(wikiWords2, splt)
+wikiTest2b = subset(wikiWords2, !splt)
+wikiRT2b = rpart(Vandal ~., data=wikiTrain2b, method="class")
+pRT2b = predict(wikiRT2b, wikiTest2b, type="class")
+ctRT2b = table(wikiTest2b$Vandal, pRT3)
+(ctRT2b[1,1]+ctRT2b[2,2])/nrow(wikiTest2b)
+
+wikiWords3 = wikiWords2
+wikiWords3$Minor = wiki$Minor
+wikiWords3$Loggedin = wiki$Loggedin
+wikiTrain3 = subset(wikiWords3, splt)
+wikiTest3 = subset(wikiWords3, !splt)
+wikiRT3 = rpart(Vandal ~., data=wikiTrain3, method="class")
+pRT3 = predict(wikiRT3, wikiTest3, type="class")
+ctRT3 = table(wikiTest3$Vandal, pRT3)
+(ctRT3[1,1]+ctRT3[2,2])/nrow(wikiTest3)
+
+prp(wikiRT3)
+
+## Assignment 2
