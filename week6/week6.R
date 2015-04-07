@@ -1,4 +1,4 @@
-
+library(caret)
 
 
 ## QQs
@@ -57,3 +57,41 @@ tail(sort(colMeans(kcluster3)))
 tail(sort(colMeans(kcluster2)))
 
 table(clusterGroups, kosCluster)
+
+## Assignment 2
+
+airlines = read.csv("AirlinesCluster.csv")
+data.frame(x=sort(colMeans(airlines)))
+
+preproc = preProcess(airlines)
+airlinesNorm = predict(preproc, airlines)
+data.frame(x=sort(sapply(airlinesNorm, max)))
+data.frame(x=sort(sapply(airlinesNorm, min)))
+
+airDist = dist(airlinesNorm, method = "euclidean")
+airHclust = hclust(airDist, method = "ward.D") 
+plot(airHclust)
+
+clusterGroups = cutree(airHclust, k = 5)
+table(clusterGroups)
+
+out = data.frame()
+for (n in names(airlines)) {
+  out = rbind(out, tapply(airlines[,n], clusterGroups, mean))
+}
+names(out) = 1:5
+out = data.frame(t(out))
+names(out) = names(airlines)
+
+set.seed(88)
+airKmeans = kmeans(airlinesNorm, 5, iter.max=1000)
+airKclust = airKmeans$cluster
+sum(table(airKclust)>1000)
+
+out2 = data.frame()
+for (n in names(airlines)) {
+  out2 = rbind(out2, tapply(airlines[,n], airKclust, mean))
+}
+names(out2) = 1:5
+out2 = data.frame(t(out2))
+names(out2) = names(airlines)
