@@ -1,5 +1,6 @@
 library(caret)
-
+library(caTools)
+library(flexclust)
 
 ## QQs
 
@@ -95,3 +96,77 @@ for (n in names(airlines)) {
 names(out2) = 1:5
 out2 = data.frame(t(out2))
 names(out2) = names(airlines)
+
+## Assignment 3
+stocks = read.csv("StocksCluster.csv")
+nrow(stocks)
+prop.table(table(stocks$PositiveDec>0))
+
+sort(cor(stocks))
+
+sort(colMeans(stocks))
+
+set.seed(144)
+spl = sample.split(stocks$PositiveDec, SplitRatio = 0.7)
+stocksTrain = subset(stocks, spl == TRUE)
+stocksTest = subset(stocks, spl == FALSE)
+StocksModel = glm(PositiveDec  ~ ., stocksTrain, family="binomial")
+StocksModelPred = predict(StocksModel, stocksTrain, type="response")
+ct = table(stocksTrain$PositiveDec, StocksModelPred>=0.5)
+(ct[1,1]+ct[2,2])/nrow(stocksTrain)
+
+StocksModelPredTest = predict(StocksModel, stocksTest, type="response")
+ct = table(stocksTest$PositiveDec, StocksModelPredTest>=0.5)
+(ct[1,1]+ct[2,2])/nrow(stocksTest)
+
+sort(table(stocksTrain$PositiveDec))
+sum(stocksTest$PositiveDec==1)/nrow(stocksTest)
+
+limitedTrain = stocksTrain
+limitedTrain$PositiveDec = NULL
+limitedTest = stocksTest
+limitedTest$PositiveDec = NULL
+preproc = preProcess(limitedTrain)
+normTrain = predict(preproc, limitedTrain)
+normTest = predict(preproc, limitedTest)
+mean(normTrain$ReturnJan)
+mean(normTest$ReturnJan)
+
+set.seed(144)
+km = kmeans(normTrain, 3)
+kmClust = km$cluster
+table(kmClust)
+
+km.kcca = as.kcca(km, normTrain)
+clusterTrain = predict(km.kcca)
+clusterTest = predict(km.kcca, newdata=normTest)
+table(clusterTest)
+
+stocksTrain1 = subset(stocksTrain, clusterTrain==1)
+stocksTest1  = subset(stocksTest,  clusterTest==1)
+stocksTrain2 = subset(stocksTrain, clusterTrain==2)
+stocksTest2  = subset(stocksTest,  clusterTest==2)
+stocksTrain3 = subset(stocksTrain, clusterTrain==3)
+stocksTest3  = subset(stocksTest,  clusterTest==3)
+sort(tapply(stocksTrain$PositiveDec, clusterTrain, mean))
+
+StocksModel1 = glm(PositiveDec~.,stocksTrain1,family="binomial")
+StocksModel2 = glm(PositiveDec~.,stocksTrain2,family="binomial")
+StocksModel3 = glm(PositiveDec~.,stocksTrain3,family="binomial")
+sort( (StocksModel1$coef>0 | StocksModel2$coef>0 | StocksModel3$coef>0) &
+      (StocksModel1$coef<0 | StocksModel2$coef<0 | StocksModel3$coef<0))
+
+PredictTest1 = predict(StocksModel1, stocksTest1, type="response")
+PredictTest2 = predict(StocksModel2, stocksTest2, type="response")
+PredictTest3 = predict(StocksModel3, stocksTest3, type="response")
+ct1 = table(stocksTest1$PositiveDec, PredictTest1>=0.5)
+(ct1[1,1]+ct1[2,2])/nrow(stocksTest1)
+ct2 = table(stocksTest2$PositiveDec, PredictTest2>=0.5)
+(ct2[1,1]+ct2[2,2])/nrow(stocksTest2)
+ct3 = table(stocksTest3$PositiveDec, PredictTest3>=0.5)
+(ct3[1,1]+ct3[2,2])/nrow(stocksTest3)
+
+AllPredictions = c(PredictTest1, PredictTest2, PredictTest3)
+AllOutcomes = c(stocksTest1$PositiveDec, stocksTest2$PositiveDec, stocksTest3$PositiveDec)
+ct = table(AllOutcomes, AllPredictions>=0.5)
+(ct[1,1]+ct[2,2])/length(AllPredictions)
