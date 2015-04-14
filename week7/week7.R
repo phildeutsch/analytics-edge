@@ -2,6 +2,8 @@ library(ggplot2)
 library(maps)
 library(ggmap)
 library(igraph)
+library(wordcloud)
+library(RColorBrewer)
 
 ## Assignment 1
 
@@ -71,3 +73,27 @@ V(g)$color = "black"
 V(g)$color[V(g)$locale == "A"] = "red"
 V(g)$color[V(g)$locale == "B"] = "gray"
 plot(g, vertex.label=NA, edge.width=2)
+
+## Assignment 3
+
+tweets = read.csv("tweets.csv", stringsAsFactors=FALSE)
+corpus = Corpus(VectorSource(tweets$Tweet))
+corpus = tm_map(corpus, tolower)
+corpus = tm_map(corpus, PlainTextDocument)
+corpus = tm_map(corpus, removePunctuation)
+corpus = tm_map(corpus, removeWords, stopwords("english"))
+dtm = DocumentTermMatrix(corpus)
+allTweets = as.data.frame(as.matrix(dtm))
+dim(allTweets)
+
+wordcloud(names(allTweets), colSums(allTweets), scale=c(2, 0.25))
+
+corpus = tm_map(corpus, removeWords, c("apple"))
+dtm = DocumentTermMatrix(corpus)
+allTweets = as.data.frame(as.matrix(dtm))
+wordcloud(names(allTweets), colSums(allTweets), scale=c(2, 0.25))
+
+display.brewer.all()
+
+wordcloud(names(allTweets), colSums(allTweets), scale=c(2, 0.25),colors=brewer.pal(9, "Blues"))
+
