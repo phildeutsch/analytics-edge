@@ -221,3 +221,6 @@ pip-log.txt
 # R files
 .Rhistory
 .RData
+
+# Kaggle folder
+kaggle/*
